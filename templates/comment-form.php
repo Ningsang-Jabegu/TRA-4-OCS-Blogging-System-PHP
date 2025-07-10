@@ -38,9 +38,7 @@
         <label for="comment-text">
             Comment:
         </label>
-        <textarea id="comment-text" name="comment-text" rows="8" cols="70">
-            <?php echo htmlEscape($commentData['text']) ?>
-        </textarea>
+        <textarea id="comment-text" name="comment-text" rows="8" cols="70"><?php echo htmlEscape($commentData['text']) ?></textarea>
     </p>
     <input type="submit" value="Submit comment" />
 </form>
