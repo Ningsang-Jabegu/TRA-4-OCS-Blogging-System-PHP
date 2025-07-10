@@ -1,70 +1,13 @@
 <?php
 require_once 'lib/common.php';
-/**
- * Install the blog application.
- *
- * This function creates a new database file, runs the SQL commands to set up
- * the database schema and demo data, and returns the number of posts and
- * comments created, or an error message if something went wrong.
- *
- * @return array An array containing the counts of posts and comments, or an error message.
- */
-
-function installBlog()
-{
-    // Get the PDO DSN string
-    $root = getRootPath();
-    $database = getDatabasePath();
-    $error = '';
-    // A security measure, to avoid anyone resetting the database if it already exists
-    if (is_readable($database) && filesize($database) > 0) {
-        $error = 'Please delete the existing database manually before installing it afresh';
-    }
-    // Create an empty file for the database
-    if (!$error) {
-        $createdOk = @touch($database);
-        if (!$createdOk) {
-            $error = sprintf(
-                'Could not create the database, please allow the server to create new files in \'%s\'',
-                dirname($database)
-            );
-        }
-    }
-    // Grab the SQL commands we want to run on the database
-    if (!$error) {
-        $sql = file_get_contents($root . '/data/init.sql');
-        if ($sql === false) {
-            $error = 'Cannot find SQL file';
-        }
-    }
-    // Connect to the new database and try to run the SQL commands
-    if (!$error) {
-        $pdo = getPDO();
-        $result = $pdo->exec($sql);
-        if ($result === false) {
-            $error = 'Could not run SQL: ' . print_r($pdo->errorInfo(), true);
-        }
-    }
-    // See how many rows we created, if any
-    $count = array();
-    foreach (array('post', 'comment') as $tableName) {
-        if (!$error) {
-            $sql = "SELECT COUNT(*) AS c FROM " . $tableName;
-            $stmt = $pdo->query($sql);
-            if ($stmt) {
-                // We store each count in an associative array
-                $count[$tableName] = $stmt->fetchColumn();
-            }
-        }
-    }
-    return array($count, $error);
-}
+require_once 'lib/install.php';
 // We store stuff in the session, to survive the redirect to self
 session_start();
 // Only run the installer when we're responding to the form
 if ($_POST) {
     // Here's the install
-    list($_SESSION['count'], $_SESSION['error']) = installBlog();
+    $pdo = getPDO();
+    list($_SESSION['count'], $_SESSION['error']) = installBlog($pdo);
     // ... and here we redirect from POST to GET
     redirectAndExit('install.php');
 }
